@@ -79,6 +79,7 @@ class CategorySearchResult:
     """Output of news_category_search_agent."""
     categories: list[str]
     fetch_latest: bool          # True when user wants newest articles in those categories
+    is_news_query: bool = True  # False when the query is not news-related
 
 
 @dataclass

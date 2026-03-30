@@ -22,19 +22,26 @@ import agents.news_category_search_agent  # noqa: F401 — needed for patch() ta
 class TestCategoryIntent:
     def test_valid_intent(self):
         from agents.news_category_search_agent import CategoryIntent
-        intent = CategoryIntent(categories=["technology", "ai"], fetch_latest=True)
+        intent = CategoryIntent(
+            categories=["technology", "ai"], fetch_latest=True, is_news_query=True
+        )
         assert intent.categories == ["technology", "ai"]
         assert intent.fetch_latest is True
+        assert intent.is_news_query is True
 
     def test_empty_categories_allowed(self):
         from agents.news_category_search_agent import CategoryIntent
-        intent = CategoryIntent(categories=[], fetch_latest=False)
+        intent = CategoryIntent(categories=[], fetch_latest=False, is_news_query=False)
         assert intent.categories == []
+        assert intent.is_news_query is False
 
     def test_fetch_latest_defaults_supported(self):
         from agents.news_category_search_agent import CategoryIntent
-        intent = CategoryIntent(categories=["sports"], fetch_latest=False)
+        intent = CategoryIntent(
+            categories=["sports"], fetch_latest=False, is_news_query=True
+        )
         assert intent.fetch_latest is False
+        assert intent.is_news_query is True
 
 
 # ---------------------------------------------------------------------------
@@ -193,3 +200,43 @@ class TestRunCategorySearchAgent:
 
         # ES error is swallowed; categories still come through from LLM
         assert result.categories == ["finance"]
+
+    def test_is_news_query_true_for_news_topics(self, mock_es_client):
+        mock_es_client.search.return_value = {"hits": {"total": {"value": 3}}}
+
+        chain = MagicMock()
+        chain.invoke.return_value = {
+            "categories": ["technology"],
+            "fetch_latest": False,
+            "is_news_query": True,
+        }
+
+        with (
+            patch("agents.news_category_search_agent._build_intent_chain", return_value=chain),
+            patch("agents.news_category_search_agent.get_es_client", return_value=mock_es_client),
+        ):
+            from agents.news_category_search_agent import run_category_search_agent
+            result = run_category_search_agent("latest tech news")
+
+        assert result.is_news_query is True
+
+    def test_is_news_query_false_skips_es_and_returns_early(self, mock_es_client):
+        chain = MagicMock()
+        chain.invoke.return_value = {
+            "categories": [],
+            "fetch_latest": False,
+            "is_news_query": False,
+        }
+
+        with (
+            patch("agents.news_category_search_agent._build_intent_chain", return_value=chain),
+            patch("agents.news_category_search_agent.get_es_client", return_value=mock_es_client),
+        ):
+            from agents.news_category_search_agent import run_category_search_agent
+            result = run_category_search_agent("what is 2 + 2?")
+
+        assert result.is_news_query is False
+        assert result.categories == []
+        assert result.fetch_latest is False
+        # ES should NOT have been called for a non-news query
+        mock_es_client.search.assert_not_called()

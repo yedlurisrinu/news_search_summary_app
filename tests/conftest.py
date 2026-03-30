@@ -79,14 +79,27 @@ def sample_articles(sample_article_hit):
 def category_result():
     """Return a CategorySearchResult for technology topics."""
     from agents.base import CategorySearchResult
-    return CategorySearchResult(categories=["technology", "ai"], fetch_latest=False)
+    return CategorySearchResult(
+        categories=["technology", "ai"], fetch_latest=False, is_news_query=True
+    )
 
 
 @pytest.fixture()
 def category_result_latest():
     """Return a CategorySearchResult with fetch_latest=True."""
     from agents.base import CategorySearchResult
-    return CategorySearchResult(categories=["technology"], fetch_latest=True)
+    return CategorySearchResult(
+        categories=["technology"], fetch_latest=True, is_news_query=True
+    )
+
+
+@pytest.fixture()
+def off_topic_category_result():
+    """Return a CategorySearchResult flagged as non-news."""
+    from agents.base import CategorySearchResult
+    return CategorySearchResult(
+        categories=[], fetch_latest=False, is_news_query=False
+    )
 
 
 @pytest.fixture()

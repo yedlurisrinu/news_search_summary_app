@@ -32,6 +32,21 @@ from agents.news_summary_agent import run_summary_agent
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Polite static replies for out-of-scope situations
+# ---------------------------------------------------------------------------
+
+_OFF_TOPIC_REPLY = (
+    "I'm a news search assistant and can only help with news-related queries. "
+    "Please ask me about topics such as technology, politics, sports, business, "
+    "science, health, climate, or world events."
+)
+
+_NO_NEWS_FOUND_REPLY = (
+    "I searched for news articles matching your query but couldn't find any relevant results. "
+    "Try broadening your search terms or asking about a different topic."
+)
+
 
 def _serialise_article(article: ArticleHit) -> dict:
     """Return a clean dict for the API response — omit raw content."""
@@ -80,6 +95,17 @@ def run_manager_agent(query: str) -> AgentResponse:
             error=f"CategorySearchAgent failed: {exc}",
         )
 
+    # ── Guard rail 1: Reject off-topic queries ────────────────────────────────
+    if not category_result.is_news_query:
+        logger.info("ManagerAgent: query is not news-related — returning polite refusal.")
+        return AgentResponse(
+            query=query,
+            categories=[],
+            summary=_OFF_TOPIC_REPLY,
+            articles=[],
+            duration_seconds=round(time.perf_counter() - start, 3),
+        )
+
     # ── Step 2: Semantic news search ─────────────────────────────────────────
     try:
         search_result = run_news_search_agent(
@@ -95,6 +121,17 @@ def run_manager_agent(query: str) -> AgentResponse:
             articles=[],
             duration_seconds=time.perf_counter() - start,
             error=f"NewsSearchAgent failed: {exc}",
+        )
+
+    # ── Guard rail 2: No articles found ──────────────────────────────────────
+    if not search_result.articles:
+        logger.info("ManagerAgent: no articles found — returning polite no-results reply.")
+        return AgentResponse(
+            query=query,
+            categories=category_result.categories,
+            summary=_NO_NEWS_FOUND_REPLY,
+            articles=[],
+            duration_seconds=round(time.perf_counter() - start, 3),
         )
 
     # ── Step 3: Summarization ────────────────────────────────────────────────

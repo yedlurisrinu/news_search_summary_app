@@ -41,13 +41,23 @@ class CategoryIntent(BaseModel):
     categories: list[str] = Field(
         description=(
             "List of news category names extracted from the user query. "
-            "Use lowercase, singular nouns e.g. 'technology', 'politics', 'sports'."
+            "Use lowercase, singular nouns e.g. 'technology', 'politics', 'sports'. "
+            "Return an empty list when is_news_query is false."
         )
     )
     fetch_latest: bool = Field(
         description=(
             "True if the user explicitly asks for latest, recent, today's, "
             "or newest articles. False otherwise."
+        )
+    )
+    is_news_query: bool = Field(
+        description=(
+            "True if the query is asking about news, current events, articles, "
+            "or any real-world topic that could appear in a news feed. "
+            "False if the query is a general knowledge question, a request for "
+            "opinions, creative writing, coding help, math, personal advice, "
+            "or anything clearly unrelated to news."
         )
     )
 
@@ -60,14 +70,21 @@ _CATEGORY_PROMPT = ChatPromptTemplate.from_messages([
     (
         "system",
         """You are a news query analyser. Given a user query, extract:
-1. `categories`: the news topic categories being asked about.
+1. `is_news_query`: true if the query is about news, current events, or any topic
+   that could appear in a news feed (politics, technology, sports, business, science,
+   health, climate, finance, entertainment, world affairs, etc.).
+   Set to false for general knowledge questions, coding help, math, creative writing,
+   personal advice, opinions, or anything clearly unrelated to news.
+2. `categories`: the news topic categories being asked about.
    Use well-known category names such as: technology, politics, sports, business,
    entertainment, science, health, world, finance, climate, ai, crypto.
    If the query spans multiple topics return all of them.
-2. `fetch_latest`: true only when the user explicitly wants recent/latest/today's news.
+   Return an empty list when is_news_query is false.
+3. `fetch_latest`: true only when the user explicitly wants recent/latest/today's news.
+   Always false when is_news_query is false.
 
 Respond ONLY with valid JSON matching this schema:
-{{"categories": ["..."], "fetch_latest": true/false}}""",
+{{"is_news_query": true/false, "categories": ["..."], "fetch_latest": true/false}}""",
     ),
     ("human", "{query}"),
 ])
@@ -152,8 +169,15 @@ def run_category_search_agent(query: str) -> CategorySearchResult:
     chain = _build_intent_chain()
     intent: dict = chain.invoke({"query": query})
 
+    is_news_query: bool = intent.get("is_news_query", True)
     categories: list[str] = intent.get("categories", [])
     fetch_latest: bool = intent.get("fetch_latest", False)
+
+    if not is_news_query:
+        logger.info("CategorySearchAgent: query is not news-related — skipping ES check.")
+        return CategorySearchResult(
+            categories=[], fetch_latest=False, is_news_query=False
+        )
 
     if not categories:
         logger.warning("No categories extracted — defaulting to 'general news'.")
@@ -162,6 +186,9 @@ def run_category_search_agent(query: str) -> CategorySearchResult:
     verified = _resolve_categories_in_es(categories)
 
     logger.info(
-        "CategorySearchAgent: categories=%s fetch_latest=%s", verified, fetch_latest
+        "CategorySearchAgent: categories=%s fetch_latest=%s is_news_query=%s",
+        verified, fetch_latest, is_news_query,
     )
-    return CategorySearchResult(categories=verified, fetch_latest=fetch_latest)
+    return CategorySearchResult(
+        categories=verified, fetch_latest=fetch_latest, is_news_query=True
+    )

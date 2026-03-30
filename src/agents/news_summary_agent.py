@@ -38,8 +38,15 @@ Your task:
 - Write a clear, factual summary of 3–5 paragraphs that directly answers the query.
 - Lead with the most important finding.
 - When referencing a specific fact, cite the article title in brackets, e.g. [Article Title].
-- Do not invent facts. If the articles are insufficient, say so explicitly.
-- Remain objective and neutral in tone.""",
+- Remain objective and neutral in tone.
+
+Strict grounding rules — you MUST follow these without exception:
+- Use ONLY information explicitly stated in the retrieved articles below.
+- Do NOT use your training knowledge, general world knowledge, or any information
+  not present in the provided context.
+- Do NOT speculate, infer, or fill in gaps beyond what the articles state.
+- If the provided articles do not contain enough information to answer the query,
+  say so explicitly: state what was found and what remains unanswered.""",
     ),
     (
         "human",
