@@ -77,16 +77,16 @@ User Query (POST /query)
 
 ### Key Components
 
-| Module | Responsibility |
-|--------|---------------|
-| `src/api/app.py` | FastAPI application, request validation, CORS, static file serving |
-| `src/agents/manager_agent.py` | Orchestrates the three-agent pipeline, error handling, LangSmith tracing |
-| `src/agents/news_category_search_agent.py` | LLM intent parsing + ES category verification |
-| `src/agents/news_search_agent.py` | Elasticsearch semantic search query builder and executor |
-| `src/agents/news_summary_agent.py` | GPT-4o-mini summarization chain |
-| `src/agents/base.py` | Shared ES client factory, data models |
-| `src/config/elastic_setup.py` | Properties-file reader for Elasticsearch connection config |
-| `static/chat-ui.html` | Self-contained browser chat interface |
+| Module                                     | Responsibility                                                           |
+|--------------------------------------------|--------------------------------------------------------------------------|
+| `src/api/app.py`                           | FastAPI application, request validation, CORS, static file serving       |
+| `src/agents/manager_agent.py`              | Orchestrates the three-agent pipeline, error handling, LangSmith tracing |
+| `src/agents/news_category_search_agent.py` | LLM intent parsing + ES category verification                            |
+| `src/agents/news_search_agent.py`          | Elasticsearch semantic search query builder and executor                 |
+| `src/agents/news_summary_agent.py`         | GPT-4o-mini summarization chain                                          |
+| `src/agents/base.py`                       | Shared ES client factory, data models                                    |
+| `src/config/elastic_setup.py`              | Properties-file reader for Elasticsearch connection config               |
+| `static/chat-ui.html`                      | Self-contained browser chat interface                                    |
 
 ---
 
@@ -94,11 +94,11 @@ User Query (POST /query)
 
 ### External Services
 
-| Service | Purpose | Default address |
-|---------|---------|----------------|
-| **HashiCorp Vault** | Stores `ELASTIC_URL`, `ELASTIC_API_KEY`, `OPENAI_API_KEY`, `LANGCHAIN_API_KEY` | `http://localhost:8200` |
-| **PyPI server** (`pypiserver`) | Hosts the private `py-commons-per` wheel | `http://localhost:8080` |
-| **PostgreSQL** | Used by `news_fetch_scheduler` for article deduplication (not directly by this service, but required in the shared `infra-network`) | `localhost:5432` |
+| Service                        | Purpose                                                                                                                             | Default address         |
+|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
+| **HashiCorp Vault**            | Stores `ELASTIC_URL`, `ELASTIC_API_KEY`, `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`                                                      | `http://localhost:8200` |
+| **PyPI server** (`pypiserver`) | Hosts the private `py-commons-per` wheel                                                                                            | `http://localhost:8080` |
+| **PostgreSQL**                 | Used by `news_fetch_scheduler` for article deduplication (not directly by this service, but required in the shared `infra-network`) | `localhost:5432`        |
 
 ### Runtime Requirements
 
@@ -262,12 +262,12 @@ The `docker-compose.yml` attaches the container to `vault-network` and
 
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/` | Serves the Chat UI (`static/chat-ui.html`) |
-| `GET` | `/health` | Liveness probe — always returns `{"status": "ok"}` |
-| `GET` | `/ready` | Readiness probe — pings Elasticsearch; returns 503 if unreachable |
-| `POST` | `/query` | Runs the full multi-agent pipeline and returns a news summary |
+| Method  | Path      | Description                                                       |
+|---------|-----------|-------------------------------------------------------------------|
+| `GET`   | `/`       | Serves the Chat UI (`static/chat-ui.html`)                        |
+| `GET`   | `/health` | Liveness probe — always returns `{"status": "ok"}`                |
+| `GET`   | `/ready`  | Readiness probe — pings Elasticsearch; returns 503 if unreachable |
+| `POST`  | `/query`  | Runs the full multi-agent pipeline and returns a news summary     |
 
 ### POST /query — Request
 
@@ -352,17 +352,17 @@ xdg-open static/chat-ui.html
 
 ### Vault secrets (`secret/NEWS_SUMMARY_APP`)
 
-| Secret key | Required | Description |
-|------------|----------|-------------|
-| `ELASTIC_URL` | Yes      | Elastic Cloud HTTPS endpoint |
-| `ELASTIC_API_KEY` | Yes      | Elastic Cloud API key |
-| `OPENAI_API_KEY` | Yes      | OpenAI key for gpt-4o-mini |
-| `LANGCHAIN_API_KEY` | No       | LangSmith API key for tracing |
-| `LANGCHAIN_TRACING_V2` | No       | Set to `"true"` to enable LangSmith traces |
-| `LANGCHAIN_PROJECT` | No       | LangSmith project name |
-| `VAULT_ADDR`           | HashiCorp Vault address                     | `http://vault:8200`           |
-| `VAULT_TOKEN`          | Vault token                                 | —                             |
-| `VAULT_SECRET_PATH`    | KV v2 path for app secrets                  | `secret/data/news-summary`    |
+| Secret key             | Required                   | Description                                |
+|------------------------|----------------------------|--------------------------------------------|
+| `ELASTIC_URL`          | Yes                        | Elastic Cloud HTTPS endpoint               |
+| `ELASTIC_API_KEY`      | Yes                        | Elastic Cloud API key                      |
+| `OPENAI_API_KEY`       | Yes                        | OpenAI key for gpt-4o-mini                 |
+| `LANGCHAIN_API_KEY`    | No                         | LangSmith API key for tracing              |
+| `LANGCHAIN_TRACING_V2` | No                         | Set to `"true"` to enable LangSmith traces |
+| `LANGCHAIN_PROJECT`    | No                         | LangSmith project name                     |
+| `VAULT_ADDR`           | HashiCorp Vault address    | `http://vault:8200`                        |
+| `VAULT_TOKEN`          | Vault token                | —                                          |
+| `VAULT_SECRET_PATH`    | KV v2 path for app secrets | `secret/data/news-summary`                 |
 
 ### Elasticsearch connection (`src/resources/elastic-config.properties`)
 
@@ -376,12 +376,12 @@ connections_per_node=10
 
 ### Elasticsearch index requirements
 
-| Setting | Value |
-|---------|-------|
-| Index name | `news_articles` |
-| Semantic field | `content.semantic` (type `semantic_text`) |
-| Inference endpoint | `news-embedding-endpoint` |
-| Source fields | `article_id`, `title`, `content`, `source`, `published_at`, `link` |
+| Setting            | Value                                                              |
+|--------------------|--------------------------------------------------------------------|
+| Index name         | `news_articles`                                                    |
+| Semantic field     | `content.semantic` (type `semantic_text`)                          |
+| Inference endpoint | `news-embedding-endpoint`                                          |
+| Source fields      | `article_id`, `title`, `content`, `source`, `published_at`, `link` |
 
 ---
 
@@ -482,15 +482,13 @@ automatically (`unless-stopped`) if it crashes.
 
 Screenshots and screen recordings live in the `demo/` folder.
 
-| File | Description |
-|------|-------------|
-| `demo/chat-ui-overview.png` | Full chat UI with a sample query and formatted AI response |
-| `demo/query-response-categories.png` | Categories and summary section rendered in the UI |
-| `demo/query-response-articles.png` | Source articles list returned by the search agent |
-| `demo/langsmith-trace.png` | LangSmith end-to-end trace — all three agent spans visible |
-| `demo/api-docs-swagger.png` | Swagger UI at `/docs` |
-| `demo/full-walkthrough.webm` | End-to-end screen recording: startup → query → response |
-| `demo/chat-session.webm` | Multi-turn chat session in the browser UI |
+| File                                           | Description                                                |
+|------------------------------------------------|------------------------------------------------------------|
+| `demo/user_chat_interaction_live_session.webm` | End-to-end screen recording: startup → query → response    |
+| `demo/services_running_on_locale_docker.png`   | Services running in local docker                           |
+| `demo/user_chat_interaction_logs.png`          | User chat interaction logs                                 |
+
+
 
 > **Capturing recordings:**
 >
@@ -549,15 +547,15 @@ news_search_summary_app/
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|-------------|-----|
-| `RuntimeError: ELASTIC_URL and ELASTIC_API_KEY must be set` | Vault secrets not loaded | Verify `VAULT_ADDR`, `VAULT_TOKEN`, and `VAULT_SECRET_PATH` env vars |
-| `GET /ready` returns 503 | Elasticsearch unreachable | Check Elastic Cloud endpoint, API key, and network connectivity |
-| `ConnectionError` on startup | Docker network missing | `docker network create vault-network && docker network create infra-network` |
-| `ModuleNotFoundError: py_commons_per` | Private wheel not installed | Build and upload the wheel — see [Building the Private Wheel](#building-the-private-wheel-py_commons_per) |
-| Chat UI shows "Could not reach the server" | App not running or wrong port | Start the FastAPI server on port 8003 |
-| LangSmith traces not appearing | Missing env vars | Set `LANGCHAIN_TRACING_V2=true` and `LANGCHAIN_API_KEY` in Vault |
-| `422 Unprocessable Entity` on `/query` | Query string too short | Minimum query length is 3 characters |
+| Symptom                                                       | Likely cause                  | Fix                                                                                                       |
+|---------------------------------------------------------------|-------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `RuntimeError: ELASTIC_URL and ELASTIC_API_KEY must be set`   | Vault secrets not loaded      | Verify `VAULT_ADDR`, `VAULT_TOKEN`, and `VAULT_SECRET_PATH` env vars                                      |
+| `GET /ready` returns 503                                      | Elasticsearch unreachable     | Check Elastic Cloud endpoint, API key, and network connectivity                                           |
+| `ConnectionError` on startup                                  | Docker network missing        | `docker network create vault-network && docker network create infra-network`                              |
+| `ModuleNotFoundError: py_commons_per`                         | Private wheel not installed   | Build and upload the wheel — see [Building the Private Wheel](uilding-the-private-wheel-py_commons_p)     |
+| Chat UI shows "Could not reach the server"                    | App not running or wrong port | Start the FastAPI server on port 8003                                                                     |
+| LangSmith traces not appearing                                | Missing env vars              | Set `LANGCHAIN_TRACING_V2=true` and `LANGCHAIN_API_KEY` in Vault                                          |
+| `422 Unprocessable Entity` on `/query`                        | Query string too short        | Minimum query length is 3 characters                                                                      |
 
 ---
 
